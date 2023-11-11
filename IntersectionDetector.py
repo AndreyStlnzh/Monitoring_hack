@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 class IntersectionDetector():
     def __init__(self):
-        self.__model = YOLO("YOLOv8n.pt")
+        self.__model = YOLO("models/YOLOv8n.pt")
         self.__image_path = None
         self.__zone_path = None
 
@@ -16,7 +16,7 @@ class IntersectionDetector():
         self.__zone_bb = []
 
         self.intersected = []
-        # self.__model() # сделать первое предсказание
+        self.__model() # сделать первое предсказание
 
 
     def find_zone_file(self):
@@ -110,6 +110,16 @@ class IntersectionDetector():
         # plt.imshow(image)
         # plt.show()
         return image
+
+
+    # def compute_metrics(boxes, confidences, weights, iou_thr=0.5, skip_box_thr=0.001):
+    #     """
+    #     Computes WBF metrics for bounding boxes and confidences
+    #     """
+    #     labels = [[0 for _ in conf] for conf in confidences]
+    #     res = weighted_boxes_fusion(boxes, confidences, labels,
+    #                                 weights=weights, iou_thr=iou_thr, skip_box_thr=skip_box_thr)
+    #     return [res[0].tolist(), res[1].tolist()]
 
 
     def __make_prediction(self):
