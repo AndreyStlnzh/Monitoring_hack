@@ -14,16 +14,15 @@ class IntersectionDetector():
 
         self.__humans_bb = []
         self.__zone_bb = []
-        # self.__make_prediction()
+
+        self.intersected = []
+        # self.__model() # сделать первое предсказание
 
 
     def find_zone_file(self):
         arr_dirs = self.__image_path.split("/")
-        print(self.__image_path)
-        print(arr_dirs)
         cameras_index = arr_dirs.index("cameras")
         dir_path = self.__image_path.split("cameras")[0]
-
 
         zone_path = os.path.join(dir_path, "danger_zones", f"danger_{arr_dirs[cameras_index+1]}.txt")
         return zone_path
@@ -75,6 +74,7 @@ class IntersectionDetector():
         for human in self.__humans_bb:
             intersections_list.append(self.__calculate_intersection(human, draw))
         # self.show_all()
+        self.intersected = [i > 15 for i in intersections_list]
         return intersections_list
 
 
@@ -94,9 +94,17 @@ class IntersectionDetector():
     def show_final_image(self):
         
         image = cv2.imread(self.__image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        i = 0
         for human in self.__humans_bb:
-            image = cv2.rectangle(image, (int(human[0]), int(human[1])), (int(human[2]), int(human[3])), (0, 255, 0), 5)
+            if self.intersected[i]:
+                image = cv2.rectangle(image, (int(human[0]), int(human[1])), \
+                                  (int(human[2]), int(human[3])), (255, 0, 0), 8)
+            else:
+                image = cv2.rectangle(image, (int(human[0]), int(human[1])), \
+                                    (int(human[2]), int(human[3])), (0, 255, 0), 5)
+        
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = self.__draw_by_points(image, self.__zone_bb)
 
         # plt.imshow(image)
@@ -106,7 +114,6 @@ class IntersectionDetector():
 
     def __make_prediction(self):
         pred = self.__model(self.__image_path)
-
         if pred[0].boxes.xyxy.tolist():
             self.__humans_bb = pred[0].boxes.xyxy.tolist()
         else:
@@ -124,14 +131,18 @@ class IntersectionDetector():
         return self.__image_path
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # detector = IntersectionDetector(
     #     image_path=r"D:\Study\Hack_10.11.2023\cameras\DpR-Csp-uipv-ShV-V1\0b1a3d21-2057-4f8f-a69b-23264f438838.jpg",
     # )
 
-    # detector = IntersectionDetector()
-    # detector.set_image_path(
-    #     r"D:\Study\Hack_10.11.2023\cameras\DpR-Csp-uipv-ShV-V1\1a16321d-4371-4721-bbc9-ccfc4a17687c.jpg"
-    # )
+    detector = IntersectionDetector()
+    detector.set_image_path(
+        r"D:/Study/Hack_10.11.2023/cameras/DpR-Csp-uipv-ShV-V1/1a16321d-4371-4721-bbc9-ccfc4a17687c.jpg"
+    )
 
-    # print(detector.calculate_intersections(True))
+    a = detector.calculate_intersections(False)
+    print(type(a))
+    print(a)
+    print([i > 15 for i in a])
+

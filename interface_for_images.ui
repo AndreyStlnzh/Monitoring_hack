@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
-    <height>600</height>
+    <width>788</width>
+    <height>754</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,14 +52,14 @@
             <item>
              <widget class="QPushButton" name="pushButton_Prev">
               <property name="text">
-               <string>Пред</string>
+               <string>Пред.</string>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QPushButton" name="pushButton_Next">
               <property name="text">
-               <string>След</string>
+               <string>След.</string>
               </property>
              </widget>
             </item>
@@ -71,6 +71,13 @@
        <item>
         <widget class="QTableWidget" name="tableWidget"/>
        </item>
+       <item>
+        <widget class="QPushButton" name="pushButton_saveCSV">
+         <property name="text">
+          <string>Сохранить CSV-файл</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -81,7 +88,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>799</width>
+     <width>788</width>
      <height>21</height>
     </rect>
    </property>

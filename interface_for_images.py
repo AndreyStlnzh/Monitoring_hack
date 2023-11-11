@@ -13,7 +13,7 @@ import cv2
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QFileDialog, QTableWidgetItem
 from PyQt5.QtGui import QPixmap
 from threading import Thread
 
@@ -25,9 +25,11 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.filenames = None
         self.detected = None
-        self.table = []
-        
-
+        self.table = {
+            "filename": [],
+            "intersect": [],
+            "%": []
+        }
         self.cur_image_indx = 0
         self.detector = IntersectionDetector()
         self.setupUi()
@@ -37,6 +39,8 @@ class MainWindow(QMainWindow):
         self.resize(799, 600)
         self.setWindowTitle("MainWindow")
 
+        self.setObjectName("self")
+        self.resize(788, 754)
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
@@ -70,23 +74,34 @@ class MainWindow(QMainWindow):
         self.verticalLayout.addWidget(self.widget_2)
         self.tableWidget = QtWidgets.QTableWidget(self.widget)
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(0)
-        self.tableWidget.setRowCount(0)
+
+        self.tableWidget.setColumnCount(3)
+        self.tableWidget.setHorizontalHeaderLabels(("filname", "intersect", "%"))
+        self.tableWidget.setMinimumSize(761, 193)
+        table_width = self.tableWidget.size().width()
+        self.tableWidget.setColumnWidth(0, table_width // 2)
+        self.tableWidget.setColumnWidth(1, table_width // 4)
+        self.tableWidget.setColumnWidth(2, table_width // 4)
+
         self.verticalLayout.addWidget(self.tableWidget)
+        self.pushButton_saveCSV = QtWidgets.QPushButton(self.widget)
+        self.pushButton_saveCSV.setObjectName("pushButton_saveCSV")
+        self.verticalLayout.addWidget(self.pushButton_saveCSV)
         self.horizontalLayout.addWidget(self.widget)
         self.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 799, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 788, 21))
         self.menubar.setObjectName("menubar")
         self.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(self)
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
-
         self.label_image.setText("IMAGE")
-        self.pushButton_openFile.setText("Open files")
-        self.pushButton_Prev.setText("Пред")
-        self.pushButton_Next.setText("След")
+        self.pushButton_openFile.setText("Open file")
+        self.pushButton_Prev.setText("Пред.")
+        self.pushButton_Next.setText("След.")
+        self.pushButton_saveCSV.setText("Сохранить CSV-файл")
+
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.buttons()
@@ -97,6 +112,14 @@ class MainWindow(QMainWindow):
         self.pushButton_openFile.clicked.connect(self.browse_image)
         self.pushButton_Next.clicked.connect(self.next_image)
         self.pushButton_Prev.clicked.connect(self.prev_image)
+        self.pushButton_saveCSV.clicked.connect(self.saveCSV)
+
+
+    def saveCSV(self):
+        import pandas as pd
+
+        df = pd.DataFrame(self.table)
+        df.to_csv('output.csv')
 
 
     def convert_cv_qt(self, cv_img):
@@ -114,12 +137,27 @@ class MainWindow(QMainWindow):
         return QtGui.QPixmap.fromImage(p)
 
 
-    def detect_other_images(self):
-        self.table_data = {
-            "filename": None,
-            "Intersect": None,
-            "%": None
+    def reset_table(self):
+        self.table = {
+            "filename": [],
+            "intersect": [],
+            "%": []
         }
+
+
+    def add_row_to_table(self, filname, intersect, procent):
+        rowCount = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(rowCount)
+        self.tableWidget.setItem(rowCount, 0, QTableWidgetItem(filname))
+        self.tableWidget.setItem(rowCount, 1, QTableWidgetItem(str(intersect)))
+        self.tableWidget.setItem(rowCount, 2, QTableWidgetItem(str(procent)))
+
+        self.table["filename"].append(filname)
+        self.table["intersect"].append(intersect)
+        self.table["%"].append(procent)
+
+
+    def detect_other_images(self):
         for i in range(1, len(self.filenames)):
             self.detector.set_image_path(
                 self.filenames[i]
@@ -127,12 +165,11 @@ class MainWindow(QMainWindow):
             intersections = self.detector.calculate_intersections(False)
             self.detected[i] = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image()))
 
-            self.table_data["filename"] = self.filenames[i]
-            self.table_data["Intersect"] = [i > 15 for i in intersections]
-            self.table_data["%"] = [i for i in intersections]
-
-            self.table.append(self.table_data)
-
+            self.add_row_to_table(
+                self.filenames[i],
+                [i > 15 for i in intersections],
+                [round(i, 2) for i in intersections]
+            )
 
     def start_detect_other_images(self):
         detect_other_pics = Thread(target=self.detect_other_images)
@@ -140,21 +177,32 @@ class MainWindow(QMainWindow):
             
     
     def browse_image(self):
-        self.filenames, _ = QFileDialog.getOpenFileNames(self, 'Open Image', '', 'Image files (*.jpg *.jpeg *.png)')
-        self.detected = [None for _ in range(len(self.filenames))]
+        files, _ = QFileDialog.getOpenFileNames(self, 'Open Image', '', 'Image files (*.jpg *.jpeg *.png)')
+        if files: # Если нажали на browse и закрыли оставить прошлые
+            self.reset_table()
+            self.tableWidget.clear()
+            self.filenames = files
+            self.detected = [None for _ in range(len(self.filenames))]
 
-        if self.filenames:
-            self.detector.set_image_path(
-                self.filenames[0]
-            )
-            self.detector.calculate_intersections(False)
-            label_pic = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image()))
-            self.label_image.setPixmap(label_pic)
-            self.detected[0] = label_pic
+            if self.filenames:
+                self.detector.set_image_path(
+                    self.filenames[0]
+                )
+                # Отобразить первую картинку
+                intersections = self.detector.calculate_intersections(False)
+                label_pic = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image()))
+                self.label_image.setPixmap(label_pic)
+                self.detected[0] = label_pic
 
-            self.start_detect_other_images()
-
-            self.cur_image_indx = 0
+                self.add_row_to_table(
+                    self.filenames[0],
+                    [i > 15 for i in intersections],
+                    [round(i, 2) for i in intersections]
+                )
+                # Запустить поток обработки следующих изоражений
+                self.start_detect_other_images()
+                self.cur_image_indx = 0
+        
 
 
     def next_image(self):
@@ -171,6 +219,8 @@ class MainWindow(QMainWindow):
             while not self.detected[self.cur_image_indx]:
                 time.sleep(0.1)
             self.label_image.setPixmap(self.detected[self.cur_image_indx])
+
+    
 
 
 if __name__ == "__main__":
