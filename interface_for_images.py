@@ -10,6 +10,7 @@
 
 import sys
 import cv2
+import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QFileDialog
@@ -159,12 +160,16 @@ class MainWindow(QMainWindow):
     def next_image(self):
         if len(self.filenames) > self.cur_image_indx + 1:
             self.cur_image_indx += 1
+            while not self.detected[self.cur_image_indx]:
+                time.sleep(0.1)
             self.label_image.setPixmap(self.detected[self.cur_image_indx])
 
 
     def prev_image(self):
         if self.cur_image_indx > 0:
             self.cur_image_indx -= 1
+            while not self.detected[self.cur_image_indx]:
+                time.sleep(0.1)
             self.label_image.setPixmap(self.detected[self.cur_image_indx])
 
 

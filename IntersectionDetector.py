@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 class IntersectionDetector():
     def __init__(self):
-        self.__model = YOLO("runs/detect/train22/weights/best.pt")
+        self.__model = YOLO("YOLOv8n.pt")
         self.__image_path = None
         self.__zone_path = None
 
