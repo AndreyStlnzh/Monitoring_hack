@@ -142,7 +142,7 @@ class IntersectionDetector():
         for human in self.__humans_bb:
             if self.intersected[i]:
                 image = cv2.rectangle(image, (int(human[0]), int(human[1])),
-                                      (int(human[2]), int(human[3])), (255, 0, 0), 8)
+                                      (int(human[2]), int(human[3])), (255, 0, 0), 5)
             else:
                 image = cv2.rectangle(image, (int(human[0]), int(human[1])),
                                       (int(human[2]), int(human[3])), (0, 255, 0), 5)

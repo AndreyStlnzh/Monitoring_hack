@@ -13,11 +13,10 @@ import cv2
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QFileDialog, QTableWidgetItem
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem
 from threading import Thread
 
-from IntersectionDetector import IntersectionDetector
+from src.IntersectionDetector import IntersectionDetector
 
 
 class MainWindow(QMainWindow):
@@ -119,7 +118,7 @@ class MainWindow(QMainWindow):
         import pandas as pd
 
         df = pd.DataFrame(self.table)
-        df.to_csv('output.csv')
+        df.to_csv('results.csv')
 
 
     def convert_cv_qt(self, cv_img):
@@ -163,7 +162,7 @@ class MainWindow(QMainWindow):
                 self.filenames[i]
             )
             intersections = self.detector.calculate_intersections(False)
-            self.detected[i] = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image()))
+            self.detected[i] = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image(i+1)))
 
             self.add_row_to_table(
                 self.filenames[i],
@@ -181,6 +180,7 @@ class MainWindow(QMainWindow):
         if files: # Если нажали на browse и закрыли оставить прошлые
             self.reset_table()
             self.tableWidget.clear()
+            self.tableWidget.setRowCount(0)
             self.filenames = files
             self.detected = [None for _ in range(len(self.filenames))]
 
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
                 )
                 # Отобразить первую картинку
                 intersections = self.detector.calculate_intersections(False)
-                label_pic = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image()))
+                label_pic = QtGui.QPixmap(self.convert_cv_qt(self.detector.show_final_image(1)))
                 self.label_image.setPixmap(label_pic)
                 self.detected[0] = label_pic
 
