@@ -131,12 +131,16 @@ class IntersectionDetector():
 
         return img
 
-    def show_final_image(self) -> list:
+    def show_final_image(self, image_num) -> list:
         """
         Метод отрисовки всех объектов на изображении;
         :return Отрисованное изображение;
         """
         image = cv2.imread(self.__image_path)
+
+        cv2.putText(image, str(image_num), \
+                            [100, 200], 
+                            cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255), 10, cv2.LINE_AA)
 
         i = 0
         for human in self.__humans_bb:
